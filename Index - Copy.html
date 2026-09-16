@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tata 3 Stock Movement Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
+    <style>
+      :root { --ink:#14223b; --muted:#71809a; --line:#e6ecf4; --blue:#2563eb; --surface:#fff; --canvas:#f5f8fc; }
+      * { box-sizing:border-box; }
+      body { margin:0; color:var(--ink); background:var(--canvas); font-family:'DM Sans',Arial,sans-serif; }
+      .shell { max-width:1540px; margin:0 auto; padding:26px 30px 38px; }
+      .hero { min-height:144px; padding:27px 30px; border-radius:20px; color:#fff; background:linear-gradient(115deg,#112440 0%,#173966 55%,#2563a6 100%); display:flex; align-items:center; justify-content:space-between; gap:24px; box-shadow:0 12px 30px rgba(17,36,64,.18); }
+      .eyebrow { color:#9fcbff; font-size:11px; letter-spacing:1.8px; font-weight:700; margin:0 0 9px; }
+      h1 { font-family:Manrope,sans-serif; font-size:27px; margin:0; letter-spacing:-.6px; }
+      .subtitle { margin:8px 0 0; font-size:14px; color:#d5e4fa; }
+      .updated { text-align:right; font-size:12px; color:#c9d9ed; line-height:1.65; white-space:nowrap; }
+      .updated strong { color:white; display:block; font-size:13px; }
+      .view-tabs { display:flex; gap:3px; margin-top:22px; border-bottom:1px solid #dce5f0; }
+      .view-tab { font:700 13px 'DM Sans',sans-serif; border:0; border-radius:8px 8px 0 0; padding:11px 18px; color:var(--blue); background:transparent; border-bottom:3px solid var(--blue); cursor:default; }
+      .filter-bar { background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:14px 17px; margin:18px 0; display:flex; flex-wrap:wrap; align-items:end; gap:13px; }
+      .filter-label { color:var(--muted); font-size:11px; letter-spacing:.8px; font-weight:800; min-width:75px; padding-bottom:9px; }
+      .filter { min-width:190px; flex:1; }
+      label { display:block; color:var(--muted); font-size:10px; font-weight:700; margin:0 0 6px; text-transform:uppercase; letter-spacing:.65px; }
+      select { width:100%; color:var(--ink); background:#f8fafd; border:1px solid #dce4ef; border-radius:8px; padding:9px 10px; outline:none; font-family:inherit; }
+      select:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(37,99,235,.1); }
+      .reset { color:var(--blue); background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; font:700 12px 'DM Sans',sans-serif; padding:10px 14px; cursor:pointer; }
+      .toolbar { margin:17px 0; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; }
+      .status { font-size:12px; color:var(--muted); }
+      .status strong { color:#34445e; }
+      .refresh { color:var(--blue); background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; font:700 12px 'DM Sans',sans-serif; padding:10px 14px; cursor:pointer; }
+      .refresh:hover { background:#dbeafe; }
+      .kpis { display:grid; grid-template-columns:repeat(4,minmax(180px,1fr)); gap:14px; margin-bottom:17px; }
+      .kpi { border:1px solid var(--line); background:var(--surface); border-radius:13px; padding:16px; position:relative; overflow:hidden; min-height:104px; }
+      .kpi:before { content:""; position:absolute; top:0; left:0; right:0; height:3px; background:var(--accent,#2563eb); }
+      .kpi .label { color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.7px; font-size:10.5px; }
+      .kpi .value { font-family:Manrope,sans-serif; font-weight:800; font-size:26px; margin-top:15px; letter-spacing:-.7px; }
+      .kpi .hint { margin-top:4px; color:#8b97aa; font-size:11px; }
+      .chart-panel { margin:0 0 17px; }
+      .chart { height:290px; width:100%; }
+      .panel { background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:17px 0 0; min-width:0; overflow:hidden; }
+      .panel-title { padding:0 18px; display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+      h2 { margin:0; font-size:15px; font-family:Manrope,sans-serif; letter-spacing:-.15px; }
+      .panel-note { color:var(--muted); margin:4px 0 0; font-size:11.5px; }
+      .table-wrap { overflow:auto; max-height:650px; margin-top:14px; border-top:1px solid var(--line); }
+      table { min-width:1480px; width:100%; border-collapse:separate; border-spacing:0; font-size:11px; }
+      th, td { padding:10px 12px; border-right:1px solid #e8edf4; border-bottom:1px solid #e8edf4; text-align:right; white-space:nowrap; }
+      th:first-child, td:first-child { border-left:0; }
+      thead th { color:#fff; background:#18375f; font-size:10px; font-weight:700; letter-spacing:.25px; text-align:center; }
+      thead tr:first-child th { position:sticky; top:0; z-index:4; background:#122e53; text-transform:uppercase; }
+      thead tr:nth-child(2) th { position:sticky; top:36px; z-index:3; background:#24578c; }
+      td { color:#34445e; background:#fff; }
+      tbody td:nth-child(-n+6) { text-align:left; }
+      tbody tr:hover td { background:#f5f9ff; }
+      .subtotal td { position:sticky; top:69px; z-index:2; color:#102b4d; background:#dbeafe; font-weight:800; border-bottom:2px solid #9bc3f3; }
+      .empty { padding:50px 18px; text-align:center; color:var(--muted); }
+      .loader { display:flex; align-items:center; justify-content:center; min-height:70vh; color:var(--muted); }
+      .dot { height:8px; width:8px; border-radius:50%; background:var(--blue); margin-right:9px; animation:pulse 1s infinite alternate; }
+      @keyframes pulse { to { opacity:.25; transform:scale(.7); } }
+      @media(max-width:900px) { .kpis { grid-template-columns:1fr 1fr; } }
+      @media(max-width:620px) { .shell { padding:16px; } .hero { padding:22px; display:block; } .updated { text-align:left; margin-top:14px; } .filter { min-width:100%; } .kpis { grid-template-columns:1fr; gap:10px; } h1 { font-size:23px; } }
+    </style>
+  </head>
+  <body>
+    <main class="shell" id="app"><div class="loader"><span class="dot"></span>Loading dashboard data…</div></main>
+    <script>
+      // YAHAN APNA GOOGLE APPS SCRIPT WEB APP URL ADD KAREIN
+      const API_URL = "https://script.google.com/a/macros/nagarmal.com/s/AKfycbzLCEqSO0wfa-du3Aurmmu_LHbfgB6jGYaCLOJeyoaFlNa4x5Wc7mqaDwfUvjl2mxVI/exec";
+
+      let dashboard = { rows: [], filters: { sections: [], departments: [] }, details: { headers: [], subHeaders: [], headerGroups: [], subtotal: [], rows: [] } };
+      let chartsReady = false;
+      google.charts.load('current', { packages: ['corechart'] });
+      google.charts.setOnLoadCallback(function() { chartsReady = true; if (dashboard.rows.length) updateDashboard(); });
+
+      const numberFormat = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 });
+      function fmt(n) { return numberFormat.format(Number(n || 0)); }
+      function sum(rows, field) { return rows.reduce((total, row) => total + Number(row[field] || 0), 0); }
+      function safe(value) { const element = document.createElement('div'); element.textContent = value == null || value === '' ? '—' : value; return element.innerHTML; }
+      function optionList(values) { return values.map(value => '<option value="' + safe(value) + '">' + safe(value) + '</option>').join(''); }
+
+      function render() {
+        const app = document.getElementById('app');
+        app.innerHTML = `
+          <section class="hero">
+            <div><p class="eyebrow">INVENTORY PERFORMANCE</p><h1>Tata 3 Stock Movement Dashboard</h1><p class="subtitle">Live detail view from the MAIN sheet</p></div>
+            <div class="updated">LAST REFRESH<strong>${safe(dashboard.updatedAt || 'Just now')}</strong></div>
+          </section>
+          <nav class="view-tabs" aria-label="Dashboard views"><button class="view-tab" type="button">Details</button></nav>
+          <section class="filter-bar">
+            <div class="filter-label">FILTER DATA</div>
+            <div class="filter"><label for="sectionFilter">Section</label><select id="sectionFilter"><option value="">All sections</option>${optionList(dashboard.filters.sections)}</select></div>
+            <div class="filter"><label for="departmentFilter">Department</label><select id="departmentFilter"><option value="">All departments</option>${optionList(dashboard.filters.departments)}</select></div>
+            <button class="reset" onclick="resetFilters()">Reset filters</button><button class="refresh" onclick="loadData()">↻ Refresh data</button>
+          </section>
+          <section class="toolbar"><div class="status" id="rowStatus"></div></section>
+          <section class="kpis">
+            <article class="kpi" style="--accent:#7c3aed"><div class="label">Final Plan</div><div class="value" id="planKpi">0</div><div class="hint">Planned quantity</div></article>
+            <article class="kpi" style="--accent:#0284c7"><div class="label">WH Stock</div><div class="value" id="whStockKpi">0</div><div class="hint">MAIN sheet column S</div></article>
+            <article class="kpi" style="--accent:#0e9f93"><div class="label">Dispatch</div><div class="value" id="dispatchKpi">0</div><div class="hint">MAIN sheet column T</div></article>
+            <article class="kpi" style="--accent:#f59e0b"><div class="label">Dispatch Pending</div><div class="value" id="pendingKpi">0</div><div class="hint">Quantity awaiting dispatch</div></article>
+          </section>
+          <section class="panel chart-panel"><div class="panel-title"><div><h2>Plan vs Pending Dispatch</h2><p class="panel-note">Top departments for the active filter.</p></div></div><div id="planChart" class="chart"></div></section>
+          <section class="panel">
+            <div class="panel-title"><div><h2>Details</h2><p class="panel-note">MAIN sheet format with its grouped header and source subtotal.</p></div></div>
+            <div class="table-wrap"><table id="detailTable"></table></div>
+          </section>`;
+        document.getElementById('sectionFilter').addEventListener('change', updateDashboard);
+        document.getElementById('departmentFilter').addEventListener('change', updateDashboard);
+        updateDashboard();
+      }
+
+      function filteredPairs() {
+        const section = document.getElementById('sectionFilter')?.value || '';
+        const department = document.getElementById('departmentFilter')?.value || '';
+        return dashboard.rows.map((row, index) => ({ row, index })).filter(item =>
+          (!section || item.row.section === section) && (!department || item.row.department === department)
+        );
+      }
+
+      function updateDashboard() {
+        const pairs = filteredPairs();
+        const rows = pairs.map(item => item.row);
+        document.getElementById('planKpi').textContent = fmt(sum(rows, 'finalPlan'));
+        document.getElementById('whStockKpi').textContent = fmt(sum(rows, 'whStock'));
+        document.getElementById('dispatchKpi').textContent = fmt(sum(rows, 'dispatch'));
+        document.getElementById('pendingKpi').textContent = fmt(sum(rows, 'dispatchPending'));
+        document.getElementById('rowStatus').innerHTML = '<strong>' + fmt(rows.length) + '</strong> matching source rows · Headers and subtotal are locked while scrolling';
+        renderTable(pairs);
+        if (chartsReady) drawPlanChart(rows);
+      }
+
+      function renderTable(pairs) {
+        const details = dashboard.details;
+        const table = document.getElementById('detailTable');
+        const topHeader = details.headerGroups.map(group => `<th colspan="${group.colSpan}"${group.hasSubHeaders ? '' : ' rowspan="2"'}>${safe(group.label)}</th>`).join('');
+        const secondHeader = details.headerGroups.filter(group => group.hasSubHeaders).map(group => details.subHeaders.slice(group.start, group.start + group.colSpan).map(header => `<th>${safe(header)}</th>`).join('')).join('');
+        const subtotal = details.subtotal.map(value => `<td>${safe(value)}</td>`).join('');
+        const body = pairs.length ? pairs.map(item => '<tr>' + details.rows[item.index].map(value => `<td>${safe(value)}</td>`).join('') + '</tr>').join('') : '<tr><td class="empty" colspan="' + details.headers.length + '">No detail rows match the selected filters.</td></tr>';
+        table.innerHTML = `<thead><tr>${topHeader}</tr><tr>${secondHeader}</tr></thead><tbody><tr class="subtotal">${subtotal}</tr>${body}</tbody>`;
+      }
+
+      function drawPlanChart(rows) {
+        const chart = document.getElementById('planChart');
+        if (!chart) return;
+        const totals = rows.reduce((result, row) => {
+          const department = row.department || 'Unassigned';
+          if (!result[department]) result[department] = { plan: 0, pending: 0 };
+          result[department].plan += Number(row.finalPlan || 0);
+          result[department].pending += Number(row.dispatchPending || 0);
+          return result;
+        }, {});
+        const data = new google.visualization.DataTable();
+        data.addColumn('string', 'Department'); data.addColumn('number', 'Final Plan'); data.addColumn('number', 'Pending');
+        data.addRows(Object.keys(totals).map(key => [key, totals[key].plan, totals[key].pending]).sort((a, b) => b[1] - a[1]).slice(0, 8));
+        new google.visualization.BarChart(chart).draw(data, {
+          legend: { position: 'top', textStyle: { color: '#65738b', fontSize: 10 } }, backgroundColor: 'transparent', colors: ['#7c3aed', '#f59e0b'],
+          chartArea: { left: 105, right: 18, top: 45, bottom: 22, width: '70%', height: '76%' },
+          hAxis: { textStyle: { color: '#708099', fontSize: 10 }, gridlines: { color: '#edf1f6' }, minValue: 0 },
+          vAxis: { textStyle: { color: '#708099', fontSize: 10 } }
+        });
+      }
+
+      function resetFilters() {
+        document.getElementById('sectionFilter').value = '';
+        document.getElementById('departmentFilter').value = '';
+        updateDashboard();
+      }
+
+      function loadData() {
+        document.getElementById('app').innerHTML = '<div class="loader"><span class="dot"></span>Refreshing live data…</div>';
+        fetch(API_URL)
+          .then(res => res.json())
+          .then(data => {
+            dashboard = data;
+            render();
+          })
+          .catch(showError);
+      }
+      function showError(error) { document.getElementById('app').innerHTML = '<div class="empty"><h2>Dashboard could not load</h2><p>' + safe(error.message || error) + '</p></div>'; }
+      loadData();
+    </script>
+  </body>
+</html>
